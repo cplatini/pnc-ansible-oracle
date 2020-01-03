@@ -1,0 +1,36 @@
+---
+- hosts: dbms
+  become: yes
+  become_method: sudo
+  user: oracle
+
+  vars:
+      oracle_home: /u01/app/oracle/product/12.2.0/dbhome_1 
+      oracle_lib: /u01/app/oracle/product/12.2.0/dbhome_1/lib 
+      hostname: "192.168.33.200"
+      service_name: clatini
+      user: OT
+      password: Happy$89
+      port: 1521
+      oracle_env:
+             ORACLE_HOME: "{{oracle_home}}"
+             LD_LIBRARY_PATH: "{{oracle_lib}}"
+
+  tasks:
+    - name: Run SQL
+      oracle_sql:
+        username: "{{user}}"
+        password: "{{password}}"
+        hostname: "{{hostname}}"
+        port: "{{port}}"
+        service_name: "{{service_name}}"
+        sql: "SELECT * FROM contacts"
+      register: results
+
+    - copy:
+        content: "{{ results | json_query(foo)}}"
+        dest: "/tmp/stuff.out"
+      delegate_to: localhost
+      vars:
+        foo: "msg"
+
